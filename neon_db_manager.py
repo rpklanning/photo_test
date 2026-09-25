@@ -7,7 +7,7 @@ import streamlit as st
 
 
 # setup error logging capture
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("neon_db_app")
 
 @st.cache_data
 def READ_NEON_DB_TABLE_INTO_DATAFRAME(database_to_read, table_to_read):

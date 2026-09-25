@@ -8,7 +8,7 @@ import datetime
 from datetime import date
 
 # setup error logging capture
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("neon_db_app")
 
 @st.cache_data
 def GET_NEW_NO_COL_RECORD_VALUE(df):
@@ -21,7 +21,8 @@ def GET_NEW_NO_COL_RECORD_VALUE(df):
     """
 
     logger.info("")
-    logger.info("FUNCTION WILL PARSE THE DATAFRAME AND GET NEXT NO COLUMN VALUE")
+    msg = ("FUNCTION WILL PARSE THE DATABASE/TABLE: wct_unposted_ledger/unposted_ledger MAX COLUMN: No VALUE AND INCREMENT BY 1")
+    logger.info(msg)
     logger.info("Attempt to convert 'No' column to list.")
     # read the "No" field of the dataframe into a list.
     try:
@@ -49,21 +50,22 @@ def GET_NEW_NO_COL_RECORD_VALUE(df):
     return no_col_next_value
 
 @st.cache_data
-def GET_ACTIVE_LIST(df, get_column, status_column):
+def GET_ACTIVE_RECORDS_FROM_DATABASE(df, dbase, get_column, status_column):
     """
     Function will parse a dataframe and return a list of get_column items based on whether the status_colum
      is "Active"
-    :param df: dataframe of the projects_list containing 'Status' and 'Project' columns
-    :param get_column: field which will be obtained from the dataframe based on the status_column
-    :param status_column: column which will be evaluated to confirm it is "Active"
+    :param df: dataframe containing the data to be obtained
+    :param get_column: column name to be returned from the dataframe based on the status_column
+    :param status_column: column name which will be evaluated to confirm it is "Active"
     :return: active_list - list of get column records
     """
     logger.info("")
-    logger.info("ATTEMPT TO PARSE THE DATAFRAME AND GET A LIST OF THE ACTIVE RECORDS")
-    logger.info(f"Parsing of dataframe column {status_column}=Active to obtain list of column records {get_column}")
+    msg = (f"PARSE DATABASE/TABLE: {dbase} TO GET A LIST OF RECORDS FROM COLUMN: {get_column} BASED ON COLUMN: {status_column}"
+           f" VALUE BEING 'Active'.")
+    logger.info(msg)
     # parse the database
     try:
-        active_list = df.loc[df['Status'] == status_column, get_column].tolist()
+        active_list = df.loc[df['Status'] == "Active", get_column].tolist()
         logger.info("Generation of the active {get_column} list was successful.")
         return active_list
 
