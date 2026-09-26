@@ -84,3 +84,17 @@ def GET_TODAYS_DATE_AND_FORMAT():
     day_str = (str(day)).replace("-","")
     return day_str
 
+def RESET_AFTER_SAVING():
+    # delete the camera widgets key to close the camera
+    if "my_camera_key" in st.session_state:
+        del st.session_state["my_camera_key"]
+
+    # reset screen to close the expander
+    st.session_state.generate_photo = False
+    st.session_state.generate_new_dataframe = False
+
+    # reset input variables
+    st.session_state.amount_number = 0.00
+
+    # force a rerun of streamlit to refresh the UI
+    st.rerun()

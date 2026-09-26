@@ -1,12 +1,14 @@
 import io
 import random
 import string
+import time
 import streamlit as st
 from neon_db_manager import READ_NEON_DB_TABLE_INTO_DATAFRAME
 from logger_configuration import LOGGER_CONFIGURATION
 from misc_functions import GET_NEW_NO_COL_RECORD_VALUE
 from misc_functions import GET_ACTIVE_RECORDS_FROM_DATABASE
 from misc_functions import GET_TODAYS_DATE_AND_FORMAT
+from misc_functions import RESET_AFTER_SAVING
 from cloudinary_file_manager import UPLOAD_FILE_TO_CLOUDINARY
 import datetime
 from datetime import date
@@ -44,13 +46,44 @@ if "generate_revised_dataframe" not in st.session_state:
 if "generate_photo" not in st.session_state:
     st.session_state.generate_photo = False
 
+if "btn_save" not in st.session_state:
+    st.session_state.btn_save = False
+
+if "btn_refresh" not in st.session_state:
+    st.session_state.btn_refresh = False
+
+###########################
 ### FUNCTIONS CODE AREA ###
 ###########################
-def btn_new_entry():
-    st.session_state["amount_number"] = 0.00
-    st.session_state.img_file_buffer = ""
+def btn_save_event(image_io):
+
+    # set storage type for a photo
+    storage_type = "photos"
+    # call function to upload the photo to Cloudinary
+    photo_upload_status = UPLOAD_FILE_TO_CLOUDINARY(image_io, st.session_state["storage_id"], storage_type)
+    if photo_upload_status:
+        alert1 = st.warning("✅ Photo Upload Status: Upload was successful!")
+    else:
+        alert1 = st.error("❌ Photo Upload Status: Upload was unsuccessful!  Retain Receipts.")
+
+    # set storage type for a photo
+    storage_type = "error logs"
+    # call function to upload error log to cloudinary
+    error_log_upload_status = UPLOAD_FILE_TO_CLOUDINARY(st.session_state.log_filename,
+                                                        st.session_state.log_filename,
+                                                        storage_type)
+    if error_log_upload_status:
+        alert2 = st.warning("✅ Error Log Upload Status: Upload was successful!")
+    else:
+        alert2 = st.error("❌ Error Log Upload Status: Upload was unsuccessful!")
+
+    time.sleep(3)
+    alert1.empty()
+    alert2.empty()
+    RESET_AFTER_SAVING()
 
 
+##############################
 ### MAIN STREAMLIT SECTION ###
 ##############################
 def STREAMLIT_MAIN(next_no_value, todays_date, active_project, active_suppliers):
@@ -136,22 +169,26 @@ def STREAMLIT_MAIN(next_no_value, todays_date, active_project, active_suppliers)
             st.error("❌ Input Status: Amount cannot be zero!")
             st.session_state.generate_photo = False
             st.session_state.generate_new_dataframe = False
-        else:
+        elif st.session_state.amount_number != 0.00:
             st.warning("📷 Input Status: Inputs are valid!  User can now take photo.")
             logger.info("User inputs are valid.  Attempt to open camera and database expander sections.")
             st.session_state.generate_photo = True
             st.session_state.generate_new_dataframe = True
 
-        # CONFIGURE CAMERA SECTION
-        # configure camera input buffer
-        if st.session_state.generate_photo:
-            logger.info("Camera Expander Section Opened")
+    # CONFIGURE CAMERA SECTION
+    # configure camera input buffer
+    if st.session_state.generate_photo:
+        with st.expander("Capture Photo", expanded=st.session_state.generate_photo):
+            logger.info("")
+            logger.info("Starting Camera Capture Event")
             img_file_buffer = st.camera_input("Take picture using buttons below:",
+                                              key="my_camera_key",
                                               resolution="1080p",
                                               )
 
             if img_file_buffer is not None:
-                # --------------------------
+                logger.info("Photo taken.")
+                #--------------------------
                 # image conversion of photo
                 #----------------------------
                 # read the image file buffer as bytes data to be transferred to Cloudinary
@@ -161,31 +198,14 @@ def STREAMLIT_MAIN(next_no_value, todays_date, active_project, active_suppliers)
                 # get and display the file size
                 bytes_len = len(img_file_buffer.getvalue())
 
-
-                logger.info("Camera has taken a photo.")
-
                 # display buttons to post or refresh data or application
                 colA, colB, colC = st.columns(3)
                 with colA:
-                    btn_save = st.button("💾 Save/Post Files")
+                    st.button("💾 Save / Post Files", on_click=btn_save_event, args=(image_io,))
                 with colB:
-                    btn_new = st.button("🔄 New / Refresh", on_click=btn_new_entry)
+                    st.button("🔄 New / Refresh")
                 with colC:
                     st.write("Photo Size (bytes): ", bytes_len)
-
-                if btn_save:
-                    storage_type = "photos"
-                    # call function to upload the photo to Cloudinary
-                    upload_status = UPLOAD_FILE_TO_CLOUDINARY(image_io, st.session_state["storage_id"],storage_type)
-                    if upload_status:
-                        st.warning("✅ Photo Upload Status: Upload was successful!")
-                        st.session_state.generate_photo = False
-                        st.session_state.generate_new_dataframe = False
-                    else:
-                        st.error("❌ Photo Upload Status: Upload was NOT successful!  Keep receipt, etc.")
-                        st.session_state.generate_photo = False
-                        st.session_state.generate_new_dataframe = False
-
 
 
 
