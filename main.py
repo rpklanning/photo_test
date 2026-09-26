@@ -15,7 +15,6 @@ from io import FileIO
 from dotenv import load_dotenv
 import sqlalchemy  # Or sqlite3 / libsql depending on your driver
 
-
 ### PROGRAM CONFIGURATION PRIOR TO RUNNING MAIN SECTION CODE ###
 ################################################################
 # Call function to initialize the error logger
@@ -71,7 +70,6 @@ def STREAMLIT_MAIN(next_no_value, todays_date, active_project, active_suppliers)
         """,
         unsafe_allow_html=True
     )
-
 
     line_height = '3.5'
     col1, col2, col3, col4 = st.columns([.5,1,1,.5])
@@ -178,7 +176,17 @@ def STREAMLIT_MAIN(next_no_value, todays_date, active_project, active_suppliers)
                 if btn_save:
                     storage_type = "photos"
                     # call function to upload the photo to Cloudinary
-                    UPLOAD_FILE_TO_CLOUDINARY(image_io, st.session_state["storage_id"],storage_type)
+                    upload_status = UPLOAD_FILE_TO_CLOUDINARY(image_io, st.session_state["storage_id"],storage_type)
+                    if upload_status:
+                        st.warning("✅ Photo Upload Status: Upload was successful!")
+                        st.session_state.generate_photo = False
+                        st.session_state.generate_new_dataframe = False
+                    else:
+                        st.error("❌ Photo Upload Status: Upload was NOT successful!  Keep receipt, etc.")
+                        st.session_state.generate_photo = False
+                        st.session_state.generate_new_dataframe = False
+
+
 
 
     # EXPANDER TO VIEW DATAFRAME SECTION

@@ -8,7 +8,15 @@ import logging
 logger = logging.getLogger("neon_db_app")
 
 def LOGGER_CONFIGURATION():
-
+    """
+    Function will perform the following:
+    1. establish the unique filename of the Error Log
+    2. assign the session_state variable
+    3. configure thelogger
+    4. configure the file handler for display of the error log file in the streamlit application
+    5. configure the stream handler for storing the data in memory.
+    :return: logger - logging object
+    """
     # generate the error log filename
     # -----------------------------------------------------------------------------
     # Create the unique error log filename ONLY ONCE per Streamlit session
